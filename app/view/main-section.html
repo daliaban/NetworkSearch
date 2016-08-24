@@ -1,14 +1,16 @@
-<div>
+<div class="maintable">
     <h3>List of Searches</h3>
-    <div class="container table maintable">
-        <div class="row header">
-            <div class="col-md-1">#ID</div><div class="col-md-2">Name</div><div class="col-md-3">Requester</div>
-            <div class="col-md-3">Requested At</div><div class="col-md-3">Finished At</div>
-        </div>
-        <div ng-repeat="item in searches" class="row">
-            <div class="col-md-1">{{$index+1}}</div><div class="col-md-2"><a ui-sref="searchDetails({id: $index})">{{item.Name}}</a></div>
-            <div class="col-md-3">{{item.Requester}}</div><div class="col-md-3">{{item.RequestedAt | date : 'yyyy-MM-dd HH:mm:ss Z'}}</div>
-            <div class="col-md-3">{{item.FinishedAt | date : 'yyyy-MM-dd HH:mm:ss Z'}}</div>
-        </div>
+    <table class="table table-striped table-sm">
+        <thead>
+            <th>#ID</th><th>Name</th><th>Requester</th>
+            <th>Requested At</th><th>Finished At</th>
+        </thead>
+        <tbody>
+            <tr ng-repeat="item in searches">
+            <td>{{$index+1}}</td><td><a ui-sref="searchDetails({id: $index})">{{item.Name}}</a></td>
+            <td>{{item.Requester}}</td><td>{{item.RequestedAt | date : 'yyyy-MM-dd HH:mm:ss Z'}}</td>
+            <td>{{item.FinishedAt | date : 'yyyy-MM-dd HH:mm:ss Z'}}</td>
+        </tr>
+        </tbody>
     </div>
 </div>

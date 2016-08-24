@@ -4,12 +4,13 @@ html, body {
 
 .maincontainer {
     position: relative;
-    height: 100%;
+    min-height: 100%;
     text-align: center;
 }
 
 .container {
     width : 100%;
+    padding-bottom:60px;   /* Height of the footer */
 }
 
 * {
@@ -40,34 +41,22 @@ footer {
     position: absolute;
 }
 
-[class*='col-'] {
+table tr td{
     text-align: left;
-    display: table-cell;
-    vertical-align: top;
     word-wrap: break-word;
-}
-
-.table{
-    margin-top:50px;
-    overflow: auto;
 }
 
 .maintable{
     width:95%;
+    margin: auto;
 }
 
-.row {
-    display: table;
-    width:100%;
-    padding: 5px 0;
-    border-bottom: 1px solid lightgray;
+#detailsscreen {
+    width: 100%;
 }
-
-.row.header {
-    border-bottom: 2px solid rgb(221, 221, 221);
-    padding-bottom: 5px;
-    font-weight: bold;
-    color: #0b97c4;
+.detailstable {
+    width: 100%;
+    overflow: auto;
 }
 
 .pagination {
@@ -93,6 +82,31 @@ footer {
 .desclabel {
     font-weight:bold;
     color: darkblue;
+}
+
+#information{
+    height: 80px;
+}
+
+.filters {
+    width: 100%;
+    margin-bottom: 20px;
+    border-top: 1px solid grey;
+    border-bottom: 1px solid grey;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.resultsperpage {
+    float: right;
+    margin: 10px;
+}
+
+.resultsperpage a.inactive {
+    text-decoration: underline;
+}
+.resultsperpage a.active {
+    color: purple;
 }
 
 @media all and (max-width: 1280px){
