@@ -1,0 +1,37 @@
+<div>
+    <h3>Details of Search - {{search.Name}}</h3>
+    <div class="searchdescription">
+        <ul style="list-style: none;">
+           <li><span class="desclabel">Description:</span>&nbsp; {{search.Description}}</li>
+           <li><span class="desclabel">Files Found:</span>&nbsp; {{search.Count}}</li>
+        </ul>
+    </div>
+    <h5 style="float: right;"><a ui-sref="index">Go Back to Main Page</a></h5>
+    <div ng-show="data.paged.length" class="container table">
+        <div class="row header">
+            <div class="col-md-1">#ID</div><div class="col-md-5">File Path</div>
+            <div class="col-md-1">Size</div><div class="col-md-1">Extension</div>
+            <div class="col-md-2">Created On</div><div class="col-md-2">Last Used</div>
+        </div>
+        <div ng-repeat="item in data.paged" class="row">
+            <div class="col-md-1">{{(pagingOptions.curPage*pagingOptions.pageSize) + $index+1}}</div><div class="col-md-5">{{item.Path}}</div>
+            <div class="col-md-1">{{item.Size | bytes}}</div><div class="col-md-1">{{splitPath(item.Path) | uppercase}}</div>
+            <div class="col-md-2">{{item.Created | date : 'yyyy-MM-dd HH:mm:ss Z'}}</div><div class="col-md-2">{{item.LastAccessed | date : 'yyyy-MM-dd HH:mm:ss Z'}}</div>
+        </div>
+    </div>
+    <div ng-show="data.paged.length">
+        <div class="pagination">
+            <ul class="pagination-control pagination">
+                <li>
+                    <button id="prev" class="btn btn-primary" ng-disabled="pagingOptions.curPage == 0" ng-click="changePage(pagingOptions.curPage-1)">Prev</button>
+                </li>
+                <li>
+                    <span> Page {{pagingOptions.curPage + 1}} of {{ pagingOptions.totalPages }}</span>
+                </li>
+                <li>
+                    <button id="next" class="btn btn-primary" ng-disabled="pagingOptions.curPage >= pagingOptions.totalPages-1" ng-click="changePage(pagingOptions.curPage+1)">Next</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
