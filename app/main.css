@@ -5,7 +5,6 @@ html, body {
 .maincontainer {
     position: relative;
     min-height: 100%;
-    text-align: center;
 }
 
 .container {
@@ -54,11 +53,28 @@ table tr td{
 #detailsscreen {
     width: 100%;
 }
+
+#detailsscreen h3 {
+    text-align: center;
+}
 .detailstable {
     width: 100%;
     overflow: auto;
 }
 
+.spinner {
+    background-image: url('images/spinner.gif');
+    background-repeat: no-repeat;
+    width: 25%;
+    margin: auto;
+    padding: 2px 0 5px 30px;
+
+
+}
+
+#pathform {
+    margin-bottom: 20px;
+}
 .pagination {
     display: inline-block;
     float: right;
@@ -95,6 +111,16 @@ table tr td{
     border-bottom: 1px solid grey;
     padding-top: 10px;
     padding-bottom: 10px;
+    text-align: center;
+}
+
+#filterby {
+    width: inherit;
+    display: inline;
+}
+
+.form-inline{
+    padding-top: 10px;
 }
 
 .resultsperpage {

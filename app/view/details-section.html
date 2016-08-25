@@ -9,56 +9,76 @@
         </div>
         <h5 style="float: right;"><a ui-sref="index">Go Back to Main Page</a></h5>
     </div>
-    <div class="filters pull-left">
-        <form name="searchpathForm" class="form-horizontal" role="form">
-            <div class="form-group">
-                <label for="searchpath" class="control-label  col-sm-2">Search Files by Path:</label>
-                <input name="searchpath" class="form-control  col-sm-10" ng-model="searchpath" ng-pattern="/^[A-Za-z\\]*$/" required>
-            </div>
-            <button class="btn btn-primary" ng-click="searchByPath()" ng-disabled="!searchpathForm.searchpath.$valid">Search</button>
-            <button class="btn btn-primary" ng-click="clearSearch()">Clear Search</button>
-        </form>
-        
-        <form name="filterForm" class="form-group" role="form">
-            <label for="filterby">Select Filter By:</label>
-            <select name="filterby" ng-model="filterBy" ng-change="selectChange()">
-                <option value="">Select Filter</option>
-                <option value="size">By Size</option>
-                <option value="date">By Date</option>
-            </select>
-            <div ng-show="filterBy === 'size'" id="forSize">
-                <label for="minsize">Minimum Size:</label>
-                <input name="minsize">
-                <select>
-                    <option value="">bytes</option>
-                    <option value="size">KB</option>
-                    <option value="date">MB</option>
-                    <option value="">GB</option>
-                    <option value="size">TB</option>
-                    <option value="date">PB</option>
-                </select>
-                
-                <label for="minsize">Maximum Size:</label>
-                <input name="minsize">
-                <select>
-                    <option value="">bytes</option>
-                    <option value="size">KB</option>
-                    <option value="date">MB</option>
-                    <option value="">GB</option>
-                    <option value="size">TB</option>
-                    <option value="date">PB</option>
-                </select>
-            </div>
-            <div ng-show="filterBy === 'date'" id="forDate">Y</div>
-            
-            <button ng-show="filterBy" class="btn btn-primary">Apply Filter</button>
-            <button ng-show="filterBy" class="btn btn-primary">Clear Filter</button>
-        </form>
+    <div class="spinner" ng-show="loading">
+        <span>Loading ...</span>
     </div>
-    <div class="resultsperpage">
+    <div ng-show="!data.paged.length && !loading">
+        <span>No records found. <a ng-show="data.allFiles.length" href="" ng-click="enterPage()">Go Back to Previous Page</a></span>
+    </div>
+    <div class="filters" ng-show="data.paged.length">
+        <div id="pathform">
+            <form name="searchpathForm" class="form-inline" role="form">
+                <div class="form-group">
+                    <label for="searchpath" class="control-label">Search Files:</label>
+                    <input id="searchpath" name="searchpath" class="form-control" ng-model="searchpath" placeholder="\\path\goes\here" ng-pattern="/^[A-Za-z\\]*$/" required>
+                </div>
+                <button class="btn btn-primary" ng-click="searchByPath()" ng-disabled="!searchpathForm.searchpath.$valid">Search</button>
+                <button class="btn btn-primary" ng-click="resetData()" ng-disabled="!searchpathForm.searchpath.$valid">Clear Search</button>
+            </form>
+        </div>
+
+        <div>
+            <div>
+                <label for="filterby" class="control-label">Select Filter:</label>
+                <select id="filterby" name="filterby" class="form-control" ng-model="filterBy.name">
+                    <option value="">Select Filter By</option>
+                    <option value="size">File Size</option>
+                    <option value="date">Last Used Date</option>
+                </select>
+            </div>
+            <form name="filterSizeForm" class="form-inline" role="form" ng-show="filterBy.name === 'size'">
+                <div class="form-group" id="forSize">
+                    <label for="minsize" class="control-label">Minimum Size:</label>
+                    <input type="number" min="0" id="minsize" ng-model="filterBy.minval" class="form-control" name="minsize" ng-pattern="/^[0-9]*$/" required>
+                    <select id="minsizeval" ng-model="filterBy.minext" class="form-control">
+                        <option value="Bytes">Bytes</option>
+                        <option value="KB">KB</option>
+                        <option value="MB">MB</option>
+                        <option value="GB">GB</option>
+                        <option value="TB">TB</option>
+                    </select>
+
+                    <label for="maxsize" class="control-label">Maximum Size:</label>
+                    <input type="number" min="0" id="maxsize" ng-model="filterBy.maxval" class="form-control" name="maxsize" ng-pattern="/^[0-9]*$/" required>
+                    <select id="maxsizeval" ng-model="filterBy.maxext" class="form-control">
+                        <option value="Bytes">Bytes</option>
+                        <option value="KB">KB</option>
+                        <option value="MB">MB</option>
+                        <option value="GB">GB</option>
+                        <option value="TB">TB</option>
+                    </select>
+                </div>
+                <button ng-disabled="!(filterSizeForm.minsize.$valid && filterSizeForm.maxsize.$valid)" class="btn btn-primary" ng-click="filterByValue()">Apply Filter</button>
+                <button ng-disabled="!filterBy.name" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
+            </form>
+            <form name="filterDateForm" class="form-inline" role="form" ng-show="filterBy.name === 'date'" >
+                <div class="form-group" id="forDate">
+                    <label for="startdate" class="control-label">Start Date:</label>
+                    <input type="date" id="startdate" ng-model="filterBy.mindate" class="form-control" name="startdate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-08-31" required>
+                    <label for="enddate" class="control-label">End Date:</label>
+                    <input type="date" id="enddate" ng-model="filterBy.maxdate" class="form-control" name="enddate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-08-31" required>
+                </div>
+                <button ng-disabled="!(filterDateForm.startdate.$valid && filterDateForm.enddate.$valid)" class="btn btn-primary" ng-click="filterByValue()">Apply Filter</button>
+                <button ng-disabled="!filterBy.name" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
+            </form>
+            <span style="color: red; margin-top: 5px;">{{errmsg}}</span>
+        </div>
+
+    </div>
+    <div class="resultsperpage" ng-show="data.paged.length">
         <span>Results per page:</span>&nbsp;&nbsp;<a href="" ng-click="resultsPerPage(10)" ng-class="{10: 'active', 50: 'inactive', 100: 'inactive'}[pagingOptions.pageSize]">10</a>
-        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(50)" ng-class="{10: 'inactive', 50: 'active', 100: 'inactive'}[pagingOptions.pageSize]">50</a>
-        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(100)" ng-class="{10: 'inactive', 50: 'inactive', 100: 'active'}[pagingOptions.pageSize]">100</a>
+        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(50)" ng-show="data.showFiles.length >= 10" ng-class="{10: 'inactive', 50: 'active', 100: 'inactive'}[pagingOptions.pageSize]">50</a>
+        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(100)" ng-show="data.showFiles.length >= 50" ng-class="{10: 'inactive', 50: 'inactive', 100: 'active'}[pagingOptions.pageSize]">100</a>
     </div>
     <div class="detailstable" ng-show="data.paged.length">
         <table class="table table-striped table-sm">
@@ -78,24 +98,12 @@
                     <span ng-show="sortOptions.fieldName == 'Size' && sortOptions.sortReverse" class="fa fa-caret-up"></span>
                 </a>
             </th>
-            <th>
-                <a href="" ng-click="columnHeaderClick('Extension')">
-                    Extension
-                    <span ng-show="sortOptions.fieldName == 'Extension' && !sortOptions.sortReverse" class="fa fa-caret-down"></span>
-                    <span ng-show="sortOptions.fieldName == 'Extension' && sortOptions.sortReverse" class="fa fa-caret-up"></span>
-                </a>
-            </th>
-            <th>
-                <a href="" ng-click="columnHeaderClick('Date')">
-                    Last Used
-                    <span ng-show="sortOptions.fieldName == 'Date' && !sortOptions.sortReverse" class="fa fa-caret-down"></span>
-                    <span ng-show="sortOptions.fieldName == 'Date' && sortOptions.sortReverse" class="fa fa-caret-up"></span>
-                </a>
-            </th>
+            <th>Extension</th>
+            <th>Last Used</th>
         </thead>
         <tbody>
-            <tr ng-repeat="item in data.paged | orderBy:sortOptions.fieldName:sortOptions.sortReverse">
-                <td>{{(pagingOptions.curPage*pagingOptions.pageSize) + $index+1}}</td><td>{{item.Path}}</td>
+            <tr ng-repeat="item in data.paged">
+                <td>{{((pagingOptions.curPage-1)*pagingOptions.pageSize) + $index+1}}</td><td>{{item.Path}}</td>
                 <td>{{item.Size | bytes}}</td><td>{{splitPath(item.Path) | uppercase}}</td>
                 <td>{{latestDate(item.Created, item.LastModified) | date : 'yyyy-MM-dd HH:mm:ss Z'}}</td>
             </tr>
@@ -106,13 +114,13 @@
         <div class="pagination">
             <ul class="pagination-control pagination">
                 <li>
-                    <button id="prev" class="btn btn-primary" ng-disabled="pagingOptions.curPage == 0" ng-click="changePage(pagingOptions.curPage-1)">Prev</button>
+                    <button id="prev" class="btn btn-primary" ng-disabled="pagingOptions.curPage === 1" ng-click="changePage(pagingOptions.curPage-1)">Prev</button>
                 </li>
                 <li>
-                    <span> Page {{pagingOptions.curPage + 1}} of {{ pagingOptions.totalPages }}</span>
+                    <span> Page {{pagingOptions.curPage}} of {{ pagingOptions.totalPages }}</span>
                 </li>
                 <li>
-                    <button id="next" class="btn btn-primary" ng-disabled="pagingOptions.curPage >= pagingOptions.totalPages-1" ng-click="changePage(pagingOptions.curPage+1)">Next</button>
+                    <button id="next" class="btn btn-primary" ng-disabled="pagingOptions.curPage === pagingOptions.totalPages" ng-click="changePage(pagingOptions.curPage+1)">Next</button>
                 </li>
             </ul>
         </div>
