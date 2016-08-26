@@ -22,6 +22,7 @@
                 <button class="btn btn-primary" ng-click="searchByPath()" ng-disabled="!searchpathForm.searchpath.$valid">Search</button>
                 <button class="btn btn-primary" ng-click="resetData()" ng-disabled="!searchpathForm.searchpath.$valid">Clear Search</button>
             </form>
+            <span class="error" ng-show="searchpathForm.searchpath.$error.pattern">Only alphabets and '\' allowed, enter minimum 3 letters to search</span>
         </div>
 
         <div>
@@ -56,23 +57,23 @@
                     </select>
                 </div>
                 <button ng-disabled="!(filterSizeForm.minsize.$valid && filterSizeForm.maxsize.$valid)" class="btn btn-primary" ng-click="filterByValue()">Apply Filter</button>
-                <button ng-disabled="!filterBy.name" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
+                <button ng-disabled="!(filterSizeForm.minsize.$valid && filterSizeForm.maxsize.$valid)" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
             </form>
             <form name="filterDateForm" class="form-inline" role="form" ng-show="filterBy.name === 'date'" >
                 <div class="form-group" id="forDate">
                     <label for="startdate" class="control-label">Start Date:</label>
-                    <input type="date" id="startdate" ng-model="filterBy.mindate" class="form-control" name="startdate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-08-31" required>
+                    <input type="date" id="startdate" ng-model="filterBy.mindate" class="form-control" name="startdate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-12-31" required>
                     <label for="enddate" class="control-label">End Date:</label>
-                    <input type="date" id="enddate" ng-model="filterBy.maxdate" class="form-control" name="enddate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-08-31" required>
+                    <input type="date" id="enddate" ng-model="filterBy.maxdate" class="form-control" name="enddate" placeholder="yyyy-MM-dd" min="2000-01-01" max="2016-12-31" required>
                 </div>
                 <button ng-disabled="!(filterDateForm.startdate.$valid && filterDateForm.enddate.$valid)" class="btn btn-primary" ng-click="filterByValue()">Apply Filter</button>
-                <button ng-disabled="!filterBy.name" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
+                <button ng-disabled="!(filterDateForm.startdate.$valid && filterDateForm.enddate.$valid)" class="btn btn-primary" ng-click="resetData()">Clear Filter</button>
             </form>
-            <span style="color: red; margin-top: 5px;">{{errmsg}}</span>
+            <span class="error">{{errmsg}}</span>
         </div>
 
     </div>
-    <div class="resultsperpage" ng-show="data.paged.length && !(loading || filtering || clearfilter)">
+    <div class="resultsperpage" ng-show="data.paged.length && !(loading || filtering)">
         <span>Results per page:</span>&nbsp;&nbsp;<a href="" ng-click="resultsPerPage(10)" ng-class="{10: 'active', 50: 'inactive', 100: 'inactive'}[pagingOptions.pageSize]">10</a>
         &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(50)" ng-show="(data.showFiles.length && data.showFiles.length >= 10) || data.allFiles.length >= 10" ng-class="{10: 'inactive', 50: 'active', 100: 'inactive'}[pagingOptions.pageSize]">50</a>
         &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(100)" ng-show="(data.showFiles.length && data.showFiles.length >= 50) || data.allFiles.length >= 50" ng-class="{10: 'inactive', 50: 'inactive', 100: 'active'}[pagingOptions.pageSize]">100</a>
@@ -83,7 +84,7 @@
     <div class="spinner" ng-show="filtering">
         <span>Filtering ...</span>
     </div>
-    <div class="detailstable" ng-show="data.paged.length && !(loading || filtering || clearfilter)">
+    <div class="detailstable" ng-show="data.paged.length && !(loading || filtering)">
         <table class="table table-striped table-sm">
             <thead>
             <th>#ID</th>
@@ -113,7 +114,7 @@
         </tbody>
         </table> 
     </div>
-    <div ng-show="data.paged.length && !(loading || filtering || clearfilter)"">
+    <div ng-show="data.paged.length && !(loading || filtering)"">
         <div class="pagination">
             <ul class="pagination-control pagination">
                 <li>
