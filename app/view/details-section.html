@@ -9,9 +9,6 @@
         </div>
         <h5 style="float: right;"><a ui-sref="index">Go Back to Main Page</a></h5>
     </div>
-    <div class="spinner" ng-show="loading">
-        <span>Loading ...</span>
-    </div>
     <div ng-show="!data.paged.length && !loading">
         <span>No records found. <a ng-show="data.allFiles.length" href="" ng-click="enterPage()">Go Back to Previous Page</a></span>
     </div>
@@ -20,7 +17,7 @@
             <form name="searchpathForm" class="form-inline" role="form">
                 <div class="form-group">
                     <label for="searchpath" class="control-label">Search Files:</label>
-                    <input id="searchpath" name="searchpath" class="form-control" ng-model="searchpath" placeholder="\\path\goes\here" ng-pattern="/^[A-Za-z\\]*$/" required>
+                    <input id="searchpath" name="searchpath" class="form-control" ng-model="searchpath" placeholder="\\path\goes\here" ng-pattern="/^[A-Za-z\\]{3,}$/" required>
                 </div>
                 <button class="btn btn-primary" ng-click="searchByPath()" ng-disabled="!searchpathForm.searchpath.$valid">Search</button>
                 <button class="btn btn-primary" ng-click="resetData()" ng-disabled="!searchpathForm.searchpath.$valid">Clear Search</button>
@@ -75,12 +72,18 @@
         </div>
 
     </div>
-    <div class="resultsperpage" ng-show="data.paged.length">
+    <div class="resultsperpage" ng-show="data.paged.length && !(loading || filtering || clearfilter)">
         <span>Results per page:</span>&nbsp;&nbsp;<a href="" ng-click="resultsPerPage(10)" ng-class="{10: 'active', 50: 'inactive', 100: 'inactive'}[pagingOptions.pageSize]">10</a>
-        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(50)" ng-show="data.showFiles.length >= 10" ng-class="{10: 'inactive', 50: 'active', 100: 'inactive'}[pagingOptions.pageSize]">50</a>
-        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(100)" ng-show="data.showFiles.length >= 50" ng-class="{10: 'inactive', 50: 'inactive', 100: 'active'}[pagingOptions.pageSize]">100</a>
+        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(50)" ng-show="(data.showFiles.length && data.showFiles.length >= 10) || data.allFiles.length >= 10" ng-class="{10: 'inactive', 50: 'active', 100: 'inactive'}[pagingOptions.pageSize]">50</a>
+        &nbsp;&nbsp;<a href="" ng-click="resultsPerPage(100)" ng-show="(data.showFiles.length && data.showFiles.length >= 50) || data.allFiles.length >= 50" ng-class="{10: 'inactive', 50: 'inactive', 100: 'active'}[pagingOptions.pageSize]">100</a>
     </div>
-    <div class="detailstable" ng-show="data.paged.length">
+    <div class="spinner" ng-show="loading">
+        <span>Loading ...</span>
+    </div>
+    <div class="spinner" ng-show="filtering">
+        <span>Filtering ...</span>
+    </div>
+    <div class="detailstable" ng-show="data.paged.length && !(loading || filtering || clearfilter)">
         <table class="table table-striped table-sm">
             <thead>
             <th>#ID</th>
@@ -110,7 +113,7 @@
         </tbody>
         </table> 
     </div>
-    <div ng-show="data.paged.length">
+    <div ng-show="data.paged.length && !(loading || filtering || clearfilter)"">
         <div class="pagination">
             <ul class="pagination-control pagination">
                 <li>

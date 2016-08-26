@@ -17,25 +17,69 @@ angular.module('networkSearch')
         $scope.splitPath = function(str){
             return str.split('.')[1];
         };
+
+        var searchFiles = function(){
+            $scope.data.showFiles = [];
+            $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
+                var path = item.Path.toLowerCase();
+                if (path.match($scope.searchpath.toLowerCase()))
+                    return item;
+            });
+
+            setTotalPages($scope.data.showFiles.length);
+        };
         
         $scope.searchByPath = function(){
             clearFilter();
             if ($scope.searchpath !== ''){
-                $scope.data.showFiles = [];
-                $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
-                    var path = item.Path.toLowerCase();
-                    if (path.match($scope.searchpath.toLowerCase()))
-                        return item;
-                });
-                setTotalPages($scope.data.showFiles.length);
-                doLocalSorting();
-                $scope.changePage(1, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                if($scope.data.allFiles.length === $scope.search.Count){
+                    searchFiles();
+                    $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                }else {
+                    var newsearchLimit = $scope.search.Count - searchLimit;
+                    $scope.filtering = true;
+                    searchRepository.findAllFiles(searchid, searchLimit, newsearchLimit).then(function (files) {
+                        $scope.data.allFiles = $scope.data.allFiles.concat(files.data);
+                        searchFiles();
+                        doLocalSorting();
+                        $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                    }).finally(function () {
+                        $scope.filtering = false;
+                    });
+                }
             }
+        };
+
+        var filterBySize = function(minbytes, maxbytes){
+            $scope.data.showFiles = [];
+            $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
+                var size = bytesService.getBytes('KB') * item.Size;
+                if ( maxbytes >= size && size >= minbytes ){
+                    return item;
+                }
+            });
+
+            setTotalPages($scope.data.showFiles.length);
+        };
+
+        var filterByDate = function(){
+            $scope.data.showFiles = [];
+            $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
+                var lastDate = new Date($scope.latestDate(item.Created, item.LastModified));
+                var minDate = new Date($scope.filterBy.mindate);
+                var maxDate = new Date($scope.filterBy.maxdate);
+                if ( lastDate >= minDate  &&  maxDate >= lastDate ){
+                    return item;
+                }
+            });
+
+            setTotalPages($scope.data.showFiles.length);
         };
 
         $scope.filterByValue = function(){
             $scope.searchpath = '';
             $scope.errmsg = '';
+            var newsearchLimit;
             if($scope.filterBy.name !== ''){
                 if($scope.filterBy.name === 'size'){
                     var minbytes = bytesService.getBytes($scope.filterBy.minext) * parseInt($scope.filterBy.minval);
@@ -44,29 +88,39 @@ angular.module('networkSearch')
                     if (minbytes > maxbytes){
                         $scope.errmsg = "Minimum size cannot be greater than maximum size. Try again."
                     }else {
-                        $scope.data.showFiles = [];
-                        $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
-                            var size = bytesService.getBytes('KB') * item.Size;
-                            if ( maxbytes >= size && size >= minbytes ){
-                                return item;
-                            }
-                        });
+                        if($scope.data.allFiles.length === $scope.search.Count){
+                            filterBySize(minbytes, maxbytes);
+                            $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                        }else {
+                            newsearchLimit = $scope.search.Count - searchLimit;
+                            $scope.filtering = true;
+                            searchRepository.findAllFiles(searchid, searchLimit, newsearchLimit).then(function(files){
+                                $scope.data.allFiles = $scope.data.allFiles.concat(files.data);
+                                filterBySize(minbytes, maxbytes);
+                                doLocalSorting();
+                                $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                            }).finally(function(){
+                                $scope.filtering = false;
+                            });
+                        }
                     }
                 }else if($scope.filterBy.name === 'date'){
-                    $scope.data.showFiles = [];
-                    $scope.data.showFiles = $scope.data.allFiles.filter(function(item){
-                        var lastDate = new Date($scope.latestDate(item.Created, item.LastModified));
-                        var minDate = new Date($scope.filterBy.mindate);
-                        var maxDate = new Date($scope.filterBy.maxdate);
-                        if ( lastDate >= minDate  &&  maxDate >= lastDate ){
-                            return item;
-                        }
-
-                    });
+                    if($scope.data.allFiles.length === $scope.search.Count){
+                        filterBySize(minbytes, maxbytes);
+                        $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                    }else {
+                        newsearchLimit = $scope.search.Count - searchLimit;
+                        $scope.filtering = true;
+                        searchRepository.findAllFiles(searchid, searchLimit, newsearchLimit).then(function (files) {
+                            $scope.data.allFiles = $scope.data.allFiles.concat(files.data);
+                            filterByDate();
+                            doLocalSorting();
+                            $scope.changePage(1, $scope.data.showFiles, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
+                        }).finally(function () {
+                            $scope.filtering = false;
+                        });
+                    }
                 }
-                setTotalPages($scope.data.showFiles.length);
-                doLocalSorting();
-                $scope.changePage(1, Math.min($scope.pagingOptions.pageSize, $scope.data.showFiles.length));
             }
         };
         var clearFilter = function(){
@@ -78,10 +132,10 @@ angular.module('networkSearch')
         $scope.resetData = function(){
             clearFilter();
             $scope.searchpath = '';
-            $scope.data.showFiles = angular.copy($scope.data.allFiles);
+            $scope.data.showFiles = [];
             setTotalPages();
             doLocalSorting();
-            $scope.changePage(1);
+            $scope.changePage(1, $scope.data.allFiles);
         };
         
         $scope.latestDate = function(created, modified) {
@@ -90,17 +144,21 @@ angular.module('networkSearch')
         };
 
         var getFiles = function(nextId, startPage){
-            $scope.loading = true;
-            searchRepository.findAllFiles(searchid,nextId,searchLimit).then(function(files){
-                $scope.data.showFiles = [];
-                $scope.data.allFiles = $scope.data.allFiles.concat(files.data);
-                $scope.data.showFiles = angular.copy($scope.data.allFiles);
+            if($scope.data.allFiles.length < $scope.search.Count) {
+                $scope.loading = true;
+                searchRepository.findAllFiles(searchid, nextId, searchLimit).then(function (files) {
+                    $scope.data.showFiles = [];
+                    $scope.data.allFiles = $scope.data.allFiles.concat(files.data);
+                    setTotalPages();
+                    doLocalSorting();
+                    $scope.changePage(startPage, $scope.data.allFiles);
+                }).finally(function () {
+                    $scope.loading = false;
+                });
+            }else {
                 setTotalPages();
-                doLocalSorting();
-                $scope.changePage(startPage);
-            }).finally(function(){
-                $scope.loading = false;
-            });
+                $scope.changePage(startPage, $scope.data.allFiles);
+            }
         };
 
 
@@ -111,7 +169,13 @@ angular.module('networkSearch')
             $scope.pagingOptions.totalPages = Math.ceil(datalen/$scope.pagingOptions.pageSize);
         };
 
-        $scope.changePage = function(thisPage, pageSize){
+        $scope.changePage = function(thisPage, dataSet, pageSize){
+            if(!dataSet){
+                if($scope.data.showFiles.length)
+                    dataSet = $scope.data.showFiles;
+                else dataSet = $scope.data.allFiles;
+
+            }
             if (!pageSize){
                 pageSize = $scope.pagingOptions.pageSize;
             }
@@ -120,8 +184,8 @@ angular.module('networkSearch')
 
             var nextId = (thisPage-1)*pageSize;
 
-            for(var i=0; i<Math.min(pageSize, ($scope.data.showFiles.length - (pageSize * (thisPage-1)))); i++){
-                $scope.data.paged[i] =  $scope.data.showFiles[nextId+i];
+            for(var i=0; i<Math.min(pageSize, (dataSet.length - (pageSize * (thisPage-1)))); i++){
+                $scope.data.paged[i] =  dataSet[nextId+i];
             }
 
             if(nextId >= $scope.data.allFiles.length && nextId%searchLimit === 0){
@@ -130,13 +194,17 @@ angular.module('networkSearch')
         };
 
         $scope.enterPage = function(){
-            searchRepository.findOneSearch(searchid).then(function(searches){
-                $scope.search = searches.data;
-                //Presently the search limit is set as minumim of 1000 and Count
-                searchLimit = Math.min(1000, $scope.search.Count);
-                $scope.pagingOptions.pageSize = Math.min($scope.pagingOptions.pageSize, $scope.search.Count);
+            if(!$scope.search.Count){
+                searchRepository.findOneSearch(searchid).then(function(searches){
+                    $scope.search = searches.data;
+                    //Presently the search limit is set as minumim of 1000 and Count
+                    searchLimit = Math.min(10000, $scope.search.Count);
+                    $scope.pagingOptions.pageSize = Math.min($scope.pagingOptions.pageSize, $scope.search.Count);
+                    getFiles(0,1);
+                });
+            }else {
                 getFiles(0,1);
-            });
+            }
         };
 
         $scope.enterPage(); //enter page here
@@ -154,11 +222,20 @@ angular.module('networkSearch')
     };
         
         var doLocalSorting = function (){
-            if ($scope.sortOptions.sortReverse === false){
-                $scope.data.showFiles = $filter('orderBy')($scope.data.showFiles, $scope.sortOptions.fieldName);
-            }else{
-                $scope.data.showFiles = $filter('orderBy')($scope.data.showFiles, '-' + $scope.sortOptions.fieldName);
+            if($scope.data.showFiles.length){
+                if ($scope.sortOptions.sortReverse === false){
+                    $scope.data.showFiles = $filter('orderBy')($scope.data.showFiles, $scope.sortOptions.fieldName);
+                }else{
+                    $scope.data.showFiles = $filter('orderBy')($scope.data.showFiles, '-' + $scope.sortOptions.fieldName);
+                }
+            }else {
+                if ($scope.sortOptions.sortReverse === false){
+                    $scope.data.allFiles = $filter('orderBy')($scope.data.allFiles, $scope.sortOptions.fieldName);
+                }else{
+                    $scope.data.allFiles = $filter('orderBy')($scope.data.allFiles, '-' + $scope.sortOptions.fieldName);
+                }
             }
+
         };
 
         $scope.resultsPerPage = function(resultsno){
